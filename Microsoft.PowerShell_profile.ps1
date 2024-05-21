@@ -968,8 +968,9 @@ Set-PSReadLineKeyHandler -Key Ctrl+Shift+t `
 # Ensure that PSDirTag is installed before importing
 if (-not (Get-Module -ListAvailable -Name PSDirTag)) {
     Install-Module -Name PSDirTag -Scope CurrentUser -Force -SkipPublisherCheck
+    Write-Host "PSDirTag module installed successfully. Importing..."
 }
-Import-Module -Name PSDirTag
+Import-Module -Name PSDirTag -Force -ArgumentList $true
 
 ## Final Line to set prompt
 oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/catppuccin.omp.json | Invoke-Expression
