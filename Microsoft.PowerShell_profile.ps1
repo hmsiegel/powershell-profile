@@ -38,7 +38,7 @@ function Update-Profile {
         Remove-Item "$env:temp/Microsoft.PowerShell_profile.ps1" -ErrorAction SilentlyContinue
     }
 }
-#Update-Profile
+Update-Profile
 
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
   param($wordToComplete, $commandAst, $cursorPosition)
