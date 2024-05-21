@@ -15,12 +15,6 @@ if (Test-Path($ChocolateyProfile)) {
     Import-Module "$ChocolateyProfile"
 }
 
-# Ensure that PSDirTag is installed before importing
-if (-not (Get-Module -ListAvailable -Name PSDirTag)) {
-    Install-Module -Name PSDirTag -Scope CurrentUser -Force -SkipPublisherCheck
-}
-Import-Module -Name PSDirTag
-
 # Check for Profile Updates
 function Update-Profile {
     if (-not $global:canConnectToGitHub) {
@@ -971,9 +965,15 @@ Set-PSReadLineKeyHandler -Key Ctrl+Shift+t `
   [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
+# Ensure that PSDirTag is installed before importing
+if (-not (Get-Module -ListAvailable -Name PSDirTag)) {
+    Install-Module -Name PSDirTag -Scope CurrentUser -Force -SkipPublisherCheck
+}
+Import-Module -Name PSDirTag
+
 ## Final Line to set prompt
 oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/catppuccin.omp.json | Invoke-Expression
-if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+<# if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     Invoke-Expression (& { (zoxide init powershell | Out-String) })
 } else {
     Write-Host "zoxide command not found. Attempting to install via winget..."
@@ -984,7 +984,7 @@ if (Get-Command zoxide -ErrorAction SilentlyContinue) {
     } catch {
         Write-Error "Failed to install zoxide. Error: $_"
     }
-}
+} #>
 
 # Run neoFetch
 if (Test-CommandExists neofetch) {
