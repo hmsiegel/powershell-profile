@@ -1,6 +1,3 @@
-using namespace System.Management.Automation
-using namespace System.Management.Automation.Language
-
 ### PowerShell Profile Refactor
 ### Version 1.03 - Refactored
 
@@ -12,20 +9,12 @@ $canConnectToGitHub = Test-Connection github.com -Count 1 -Quiet -TimeoutSeconds
 if (-not (Get-Module -ListAvailable -Name Terminal-Icons)) {
     Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck
 }
+
 Import-Module -Name Terminal-Icons
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path($ChocolateyProfile)) {
     Import-Module "$ChocolateyProfile"
 }
-
-# Ensure that PSDirTag is installed before importing
-if (-not (Get-Module -ListAvailable -Name PSDirTag)) {
-    Install-Module -Name PSDirTag -Scope CurrentUser -Force -SkipPublisherCheck
-    Write-Host "PSDirTag module installed successfully. Importing..."
-}
-Import-Module -Name PSDirTag -Force -ArgumentList $true
-Write-Host "PSDirTag module imported successfully."
-
 
 # Check for Profile Updates
 function Update-Profile {
@@ -49,7 +38,7 @@ function Update-Profile {
         Remove-Item "$env:temp/Microsoft.PowerShell_profile.ps1" -ErrorAction SilentlyContinue
     }
 }
-Update-Profile
+#Update-Profile
 
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
   param($wordToComplete, $commandAst, $cursorPosition)
@@ -99,6 +88,35 @@ function Update-PowerShell {
 }
 Update-PowerShell
 
+function Update-OhMyPosh {
+    if (-not $global:canConnectToGitHub) {
+        Write-Host "Skipping Oh My Posh update check due to GitHub.com not responding within 1 second." -ForegroundColor Yellow
+        return
+    }
+
+    try {
+        Write-Host "Checking for Oh My Posh updates..." -ForegroundColor Cyan
+        $updateNeeded = $false
+        $currentVersion = $PSVersionTable.PSVersion.ToString()
+        $gitHubApiUrl = "https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest"
+        $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
+        $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
+        if ($currentVersion -lt $latestVersion) {
+            $updateNeeded = $true
+        }
+
+        if ($updateNeeded) {
+            Write-Host "Updating Oh My Posh..." -ForegroundColor Yellow
+            winget upgrade "JanDeDobbeleer.OhMyPosh" --accept-source-agreements --accept-package-agreements
+            Write-Host "Oh My Posh has been updated. Please restart your shell to reflect changes" -ForegroundColor Magenta
+        } else {
+            Write-Host "Your Oh My Posh is up to date." -ForegroundColor Green
+        }
+    } catch {
+        Write-Error "Failed to update Oh My Posh. Error: $_"
+    }
+}
+Update-OhMyPosh
 
 # Admin Check and Prompt Customization
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -182,6 +200,7 @@ function hb {
         Write-Error "Failed to upload the document. Error: $_"
     }
 }
+
 function grep($regex, $dir) {
     if ( $dir ) {
         Get-ChildItem $dir | select-string $regex
@@ -498,13 +517,13 @@ Set-PSReadLineKeyHandler -Key '(','{','[' `
 
   $closeChar = switch ($key.KeyChar)
   {
-    <#case#> '('
+     '('
     { [char]')'; break
     }
-    <#case#> '{'
+     '{'
     { [char]'}'; break
     }
-    <#case#> '['
+     '['
     { [char]']'; break
     }
   }
@@ -566,19 +585,19 @@ Set-PSReadLineKeyHandler -Key Backspace `
     {
       switch ($line[$cursor])
       {
-        <#case#> '"'
+         '"'
         { $toMatch = '"'; break
         }
-        <#case#> "'"
+         "'"
         { $toMatch = "'"; break
         }
-        <#case#> ')'
+         ')'
         { $toMatch = '('; break
         }
-        <#case#> ']'
+         ']'
         { $toMatch = '['; break
         }
-        <#case#> '}'
+         '}'
         { $toMatch = '{'; break
         }
       }
@@ -761,44 +780,6 @@ Set-PSReadLineKeyHandler -Key "Alt+%" `
   }
 }
 
-# F1 for help on the command line - naturally
-Set-PSReadLineKeyHandler -Key F1 `
-  -BriefDescription CommandHelp `
-  -LongDescription "Open the help window for the current command" `
-  -ScriptBlock {
-  param($key, $arg)
-
-  $ast = $null
-  $tokens = $null
-  $errors = $null
-  $cursor = $null
-  [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$ast, [ref]$tokens, [ref]$errors, [ref]$cursor)
-
-  $commandAst = $ast.FindAll( {
-      $node = $args[0]
-      $node -is [CommandAst] -and
-      $node.Extent.StartOffset -le $cursor -and
-      $node.Extent.EndOffset -ge $cursor
-    }, $true) | Select-Object -Last 1
-
-  if ($commandAst -ne $null)
-  {
-    $commandName = $commandAst.GetCommandName()
-    if ($commandName -ne $null)
-    {
-      $command = $ExecutionContext.InvokeCommand.GetCommand($commandName, 'All')
-      if ($command -is [AliasInfo])
-      {
-        $commandName = $command.ResolvedCommandName
-      }
-
-      if ($commandName -ne $null)
-      {
-        Get-Help $commandName -ShowWindow
-      }
-    }
-  }
-}
 
 
 #
@@ -978,19 +959,14 @@ Set-PSReadLineKeyHandler -Key Ctrl+Shift+t `
 }
 
 ## Final Line to set prompt
-oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/catppuccin.omp.json | Invoke-Expression
-<# if (Get-Command zoxide -ErrorAction SilentlyContinue) {
-    Invoke-Expression (& { (zoxide init powershell | Out-String) })
-} else {
-    Write-Host "zoxide command not found. Attempting to install via winget..."
-    try {
-        winget install -e --id ajeetdsouza.zoxide
-        Write-Host "zoxide installed successfully. Initializing..."
-        Invoke-Expression (& { (zoxide init powershell | Out-String) })
-    } catch {
-        Write-Error "Failed to install zoxide. Error: $_"
-    }
-} #>
+oh-my-posh init pwsh --config "https://raw.githubusercontent.com/hmsiegel/powershell-profile/main/hmsiegel.omp.json" | Invoke-Expression
+
+# Ensure that PSDirTag is installed before importing
+if (-not (Get-Module -ListAvailable -Name PSDirTag)) {
+    Install-Module -Name PSDirTag -Scope CurrentUser -Force -SkipPublisherCheck
+    Write-Host "PSDirTag module installed successfully. Importing..."
+}
+Import-Module -Name PSDirTag
 
 # Run neoFetch
 if (Test-CommandExists neofetch) {
