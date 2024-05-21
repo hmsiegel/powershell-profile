@@ -1,3 +1,6 @@
+using namespace System.Management.Automation
+using namespace System.Management.Automation.Language
+
 ### PowerShell Profile Refactor
 ### Version 1.03 - Refactored
 
