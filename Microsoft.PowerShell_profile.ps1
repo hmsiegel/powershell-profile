@@ -971,6 +971,7 @@ if (-not (Get-Module -ListAvailable -Name PSDirTag)) {
     Write-Host "PSDirTag module installed successfully. Importing..."
 }
 Import-Module -Name PSDirTag -Force -ArgumentList $true
+Write-Host "PSDirTag module imported successfully."
 
 ## Final Line to set prompt
 oh-my-posh init pwsh --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/catppuccin.omp.json | Invoke-Expression
