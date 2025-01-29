@@ -972,5 +972,3 @@ Import-Module -Name PSDirTag
 if (Test-CommandExists neofetch) {
     neofetch
 }
-
-Import-Module .\posh-git\posh-git.psd1
