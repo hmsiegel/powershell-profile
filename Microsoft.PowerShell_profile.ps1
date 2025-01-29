@@ -973,4 +973,4 @@ if (Test-CommandExists neofetch) {
     neofetch
 }
 
-Install-Module .\posh-git\posh-git.psd1 -Scope CurrentUser -Force -SkipPublisherCheck
+Import-Module .\posh-git\posh-git.psd1
