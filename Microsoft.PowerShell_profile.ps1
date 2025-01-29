@@ -972,3 +972,5 @@ Import-Module -Name PSDirTag
 if (Test-CommandExists neofetch) {
     neofetch
 }
+
+Install-Module "https://raw.githubusercontent.com/hmsiegel/powershell-profile/main/posh-git/posh-git.psd1" -Scope CurrentUser -Force -SkipPublisherCheck
