@@ -780,6 +780,11 @@ Shortcuts:
 
 Set-Alias -Name gp -Value gpush -Force
 
+# Use my oh-my-posh theme instead of upstream's cobalt2 lookup
+function Get-Theme_Override {
+    oh-my-posh init pwsh --config "https://raw.githubusercontent.com/hmsiegel/powershell-profile/main/hmsiegel.omp.json" | Invoke-Expression
+}
+
 Initialize-PSReadLine
 Register-CustomCompletion
 Initialize-PromptTool
@@ -1449,8 +1454,7 @@ Set-PSReadLineKeyHandler -Key Ctrl+Shift+t `
   [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
-## Final Line to set prompt
-oh-my-posh init pwsh --config "https://raw.githubusercontent.com/hmsiegel/powershell-profile/main/hmsiegel.omp.json" | Invoke-Expression
+## Prompt theme is set via Get-Theme_Override (defined before Initialize-PromptTool)
 
 # Ensure that PSDirTag is installed before importing
 if (-not (Get-Module -ListAvailable -Name PSDirTag)) {
