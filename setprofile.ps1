@@ -11,3 +11,9 @@ if (-not (Test-Path -Path $profileDir)) {
 }
 
 Copy-Item -Path $sourcePath -Destination $profilePath -Force
+
+# Keep the oh-my-posh theme next to the profile so startup doesn't need the network
+$themeSource = Join-Path -Path $PSScriptRoot -ChildPath 'hmsiegel.omp.json'
+if (Test-Path -Path $themeSource -PathType Leaf) {
+    Copy-Item -Path $themeSource -Destination (Join-Path $profileDir 'hmsiegel.omp.json') -Force
+}

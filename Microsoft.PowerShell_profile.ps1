@@ -255,10 +255,9 @@ function Initialize-OptionalModule {
         return
     }
 
-    if (Get-Module -ListAvailable -Name Terminal-Icons) {
-        Import-Module -Name Terminal-Icons -ErrorAction SilentlyContinue
-    } elseif ($isInteractiveShell) {
-        Write-Warning 'Terminal-Icons module is not installed. Run setup.ps1 to install dependencies.'
+    # Terminal-Icons is slow to import (~500ms), so load it once the prompt is idle instead of at startup.
+    $null = Register-EngineEvent -SourceIdentifier PowerShell.OnIdle -MaxTriggerCount 1 -Action {
+        Import-Module -Name Terminal-Icons -Global -ErrorAction SilentlyContinue
     }
 
     $chocolateyProfile = if ($env:ChocolateyInstall) {
@@ -782,7 +781,9 @@ Set-Alias -Name gp -Value gpush -Force
 
 # Use my oh-my-posh theme instead of upstream's cobalt2 lookup
 function Get-Theme_Override {
-    oh-my-posh init pwsh --config "https://raw.githubusercontent.com/hmsiegel/powershell-profile/main/hmsiegel.omp.json" | Invoke-Expression
+    $localTheme = Join-Path $profileDir 'hmsiegel.omp.json'
+    $themeSource = if (Test-Path -Path $localTheme -PathType Leaf) { $localTheme } else { "$repo_root/powershell-profile/main/hmsiegel.omp.json" }
+    oh-my-posh init pwsh --config $themeSource | Invoke-Expression
 }
 
 Initialize-PSReadLine
@@ -1457,11 +1458,12 @@ Set-PSReadLineKeyHandler -Key Ctrl+Shift+t `
 ## Prompt theme is set via Get-Theme_Override (defined before Initialize-PromptTool)
 
 # Ensure that PSDirTag is installed before importing
-if (-not (Get-Module -ListAvailable -Name PSDirTag)) {
+Import-Module -Name PSDirTag -ErrorAction SilentlyContinue
+if (-not (Get-Module -Name PSDirTag)) {
     Install-Module -Name PSDirTag -Scope CurrentUser -Force -SkipPublisherCheck
     Write-Host "PSDirTag module installed successfully. Importing..."
+    Import-Module -Name PSDirTag
 }
-Import-Module -Name PSDirTag
 
 # ---- end hmsiegel customizations ----
 
