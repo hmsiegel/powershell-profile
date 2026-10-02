@@ -1434,6 +1434,12 @@ Set-PSReadLineOption -PredictionSource History
 Set-PSReadLineOption -PredictionViewStyle ListView
 Set-PSReadLineOption -EditMode Windows
 
+# Warp can mis-track the cursor when the ListView suggestion list is drawn, which makes
+# typed text land on top of the prompt. Use inline suggestions there; keep ListView elsewhere.
+if ($env:TERM_PROGRAM -eq 'WarpTerminal') {
+    Set-PSReadLineOption -PredictionViewStyle InlineView
+}
+
 
 # This is an example of a macro that you might use to execute a command.
 # This will add the command to history.
